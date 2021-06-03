@@ -34,7 +34,7 @@ namespace NubeSync.Service
             // UNCOMMENT THIS IF YOU WANT TO ACTIVATE AUTHENTICATION
             //services.AddMicrosoftIdentityWebApiAuthentication(Configuration);
 
-            services.AddDbContext<DataContext>(opt => opt.UseSqlServer("Server=(localdb)\\v11.0;Database=nube-sample;Trusted_Connection=True;MultipleActiveResultSets=true"));
+            services.AddDbContext<DataContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("Default")));
             services.AddControllers();
             services.AddSignalR();
 
@@ -56,6 +56,15 @@ namespace NubeSync.Service
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+            }
+
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>()?.CreateScope())
+            {
+                if (serviceScope != null)
+                {
+                    var context = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+                    context.Database.Migrate();
+                }
             }
 
             app.UseHttpsRedirection();
